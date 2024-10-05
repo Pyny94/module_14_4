@@ -1,3 +1,4 @@
+import os
 from aiogram.filters.command import CommandStart
 from aiogram import Bot, Dispatcher, types,F
 from aiogram.fsm.state import State, StatesGroup
@@ -7,16 +8,16 @@ import asyncio
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.types import FSInputFile
-
+from inlyne import *
 import crud_functions
-from crud_functions import *
 
+crud_functions.initiate_db()
 logging.basicConfig(level=logging.INFO)
 api = ""
 bot = Bot(token= api)
 dp = Dispatcher()
 
-crud_functions.initiate_db()
+
 
 
 
@@ -56,32 +57,28 @@ async def main_menu(message):
                  )
 
 @dp.message(F.text == "Купить")
-async def get_buying_list(message):
+async def get_buying_list(message: types.Message):
     products = crud_functions.get_all_products()
     for product in products:
-        await message.answer(f"Название: {product[1]} | Описание: {product[2]} | Цена: {product[3]}")
-    await message.answer_document(document = FSInputFile('files/картинка.png'), caption='Название: Product1 | Описание: описание 1 | Цена: <100>')
-    await message.answer_document(document=FSInputFile('files/картинка2.png'),
-                                  caption='Название: Product2 | Описание: описание 2 | Цена: <200>')
-    await message.answer_document(document=FSInputFile('files/картинка3.png'),
-                                  caption='Название: Product3 | Описание: описание 3 | Цена: <300>')
-    await message.answer_document(document=FSInputFile('files/картинка4.png'),
-                                  caption='Название: Product4 | Описание: описание 4 | Цена: <400>')
-
-    await message.answer('Выберите продукт для покупки:',
-                         reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=[
-                                 [
-                                     InlineKeyboardButton(text="Продукт1", callback_data='product_buying'),
-                                     InlineKeyboardButton(text="Продукт2", callback_data='product_buying'),
-                                     InlineKeyboardButton(text="Продукт3", callback_data='product_buying'),
-                                     InlineKeyboardButton(text="Продукт4", callback_data='product_buying'),
-                                 ]
-                             ],
-                             resize_keyboard=True,
-                         ),
-                 )
-
+        name = product[1]
+        description = product[2]
+        price = product[3]
+        caption = f'Название: {name} | Описание: {description} | Цена: {price}'
+        # Добавляем возможность отправить фото, если у продукта есть изображение
+        if product_image_exists(product):
+            image = FSInputFile(f'files/{name}.png')
+            await message.answer_photo(image, caption=caption, show_caption_above_media=True)
+        else:
+            await message.answer(caption)
+    await message.answer('Выберите продукт для покупки:', reply_markup=get_callback_btns(btns={
+        'Продукт1': 'product_buying',
+        'Продукт2': 'product_buying',
+        'Продукт3': 'product_buying',
+        'Продукт4': 'product_buying',
+    }))
+def product_image_exists(product):
+    product_image_path = f'files/{product[1]}.png'
+    return os.path.exists(product_image_path)
 
 @dp.callback_query(F.data =='formulas')
 async def get_formulas(call: types.CallbackQuery):

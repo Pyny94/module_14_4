@@ -1,39 +1,46 @@
 import sqlite3
 
-connection = sqlite3.connect("database.db")
-cursor = connection.cursor()
 
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS Products(
-id INT PRIMARY KEY, 
-title TEXT IF NO NULL,
-description TEXT,
-price INT IF NO NULL
-)
-''')
-
-cursor.execute("INSERT INTO Products (id,title, description, price) VALUES (1,'Product 1', 'Описание продукта 1', 100)")
-cursor.execute("INSERT INTO Products (id,title, description, price) VALUES (2,'Product 2', 'Описание продукта 2', 200)")
-cursor.execute("INSERT INTO Products (id,title, description, price) VALUES (3,'Product 3', 'Описание продукта 3', 300)")
-cursor.execute("INSERT INTO Products (id, title, description, price) VALUES (4, 'Product 4', 'Описание продукта 4', 400)")
-
-
-def initiate_db(title,description,price):
-    check_title = cursor.execute("SELECT * FROM Products WHERE id = ?", (title,))
-    if check_title.fetchone() is None:
-        cursor.execute(f'''
-    INSERT INTO Products VALUES('{title},'{description}, '{price}')
-''')
-    connection.commit()
-
-def get_all_products(db_name = 'database.db'):
-    connection = sqlite3.connect("database.db")
+def initiate_db():
+    connection = sqlite3.connect('database.db')
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM Products")
-    products = cursor.fetchall()
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Products(
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    price INT NOT NULL
+    );
+    ''')
+
+   # cursor.execute('INSERT INTO Products (title, description, price) VALUES (?, ?, ?)',
+   #                 ('Продукт1', 'Описание1', '100'))
+  #  cursor.execute('INSERT INTO Products (title, description, price) VALUES (?, ?, ?)',
+  #                  ('Продукт2', 'Описание2', '200'))
+  #  cursor.execute('INSERT INTO Products (title, description, price) VALUES (?, ?, ?)',
+   #                 ('Продукт3', 'Описание3', '300'))
+   # cursor.execute('INSERT INTO Products (title, description, price) VALUES (?, ?, ?)',
+  #                  ('Продукт4', 'Описание4', '400'))
+
+    connection.commit()
     connection.close()
-    return products
 
+def add_product(product_data):
+    conn = sqlite3.connect('products')
+    c = conn.cursor()
+    c.execute('''INSERT INTO Products (title, description, price) VALUES (?, ?, ?)''', product_data)
+    conn.commit()
+    conn.close()
 
-connection.commit()
-connection.close()
+def get_all_products():
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+
+    cursor.execute('SELECT * FROM Products')
+    result = cursor.fetchall()
+
+    connection.commit()
+    connection.close()
+
+    return result
